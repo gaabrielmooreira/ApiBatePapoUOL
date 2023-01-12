@@ -20,6 +20,16 @@ try {
     console.log(err.message);
 }
 
+app.get("/participants", async (req, res) => {
+    try {
+        const participants = await db.collection("participants").find().toArray();
+        if(participants.length === 0) return res.send("Nenhum participante até o momento.");
+        res.send(participants);
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
 
+})
 
 app.listen(process.env.PORT, console.log(`Servidor iniciado na porta ${process.env.PORT}`));
