@@ -19,7 +19,7 @@ try {
     db = mongoClient.db();
     console.log("MongoDB connection succesful!");
 } catch (err) {
-    console.log(err.message);
+    console.log(err.message);  
 }
 
 app.post("/participants", async (req,res) => {
@@ -31,11 +31,12 @@ app.post("/participants", async (req,res) => {
     try {
         nameSchema.validate({name});
     } catch(err) {
-        return console.log(err);
+        console.log(err);
+        return res.status(422).send("Invalid Name.");
     }
 
     const participantExist = await db.collection("participants").findOne({name});
-    if(participantExist) return res.status(409).send("Esse nome já está sendo usado.");
+    if(participantExist) return res.status(409).send("Name has already been used.");
     
     try {
         await db.collection("participants").insertOne({name, lastStatus: Date.now()});
@@ -45,7 +46,7 @@ app.post("/participants", async (req,res) => {
                 to: 'Todos', 
                 text: 'entra na sala...',
                 type: 'status',
-                time: `${dayjs().format('HH:mm:ss')}`
+                time: dayjs().format('HH:mm:ss')
             });
     } catch(err) {
         return console.log(err);
@@ -56,7 +57,7 @@ app.post("/participants", async (req,res) => {
 app.get("/participants", async (req, res) => {
     try {
         const participants = await db.collection("participants").find().toArray();
-        if(participants.length === 0) return res.send("Nenhum participante até o momento.");
+        if(participants.length === 0) return res.send("No one participants so far.");
         res.send(participants);
     } catch (err) {
         console.log(err);
@@ -65,4 +66,30 @@ app.get("/participants", async (req, res) => {
 
 })
 
-app.listen(process.env.PORT, console.log(`Servidor iniciado na porta ${process.env.PORT}`));
+app.post("/messages", async (req,res) => {
+    const from = req.headers.user;
+    const {to, text, type} = req.body;
+
+    const nameExist = await db.collection("participants").findOne({name:from});
+    if(!nameExist) return res.sendStatus(422);
+
+    const messageSchema = Joi.object({
+        to: Joi.string().required(),
+        text: Joi.string().required(),
+        type: Joi.string().valid('message','private_message').required()
+    })
+
+    try {
+        messageSchema.validate({to, text, type});
+    } catch (err) {
+        console.log(err);
+        return res.sendStatus(422);
+    }
+
+    const newMessage = {from, to, text, type};
+
+    db.collection("messages").insertOne({...newMessage, time: dayjs().format("HH:mm:ss")})
+
+    return res.sendStatus(201);
+})
+app.listen(process.env.PORT, console.log(`Server started up in PORT: ${process.env.PORT}`));
