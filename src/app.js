@@ -78,10 +78,10 @@ app.get("/messages", async (req, res) => {
             message.to === 'Todos' ||
             message.to === user
     )
-    if (limit) {
-        if (limit <= 0 || limit === NaN) return res.sendStatus(422);
-        if (limit < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
-    }
+
+    if (!limit || limit < 0 || limit === "NaN") return res.sendStatus(422);
+    if (limit < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
+    
     res.send(filterMessages);
 })
 
@@ -141,12 +141,12 @@ async function autoRemove() {
         .insertOne({
             from: name,
             to: 'Todos',
-            text: 'saiu da sala...',
+            text: 'sai da sala...',
             type: 'status',
             time: dayjs().format('HH:mm:ss')
         }));
 }
 
-setInterval(autoRemove, 10000);
+setInterval(autoRemove, 15000);
 
 app.listen(PORT, console.log(`Server started up in PORT: ${PORT}`));
