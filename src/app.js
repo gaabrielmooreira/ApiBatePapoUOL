@@ -63,7 +63,7 @@ app.post("/participants", async (req, res) => {
 })
 
 app.get("/messages", async (req, res) => {
-    const { limit } = req.query;
+    const limit  = Number(req.query.limit);
     const user = req.headers.user;
     try {
         const messages = await db.collection("messages").find().toArray();
@@ -75,7 +75,7 @@ app.get("/messages", async (req, res) => {
         )
 
         if (limit) {
-            if (limit <= 0 || typeof (limit) === "string") return res.sendStatus(422);
+            if (limit <= 0 || limit === NaN) return res.sendStatus(422);
             if (limit < filterMessages.length) return res.send(filterMessages.slice(filterMessages.length - limit, filterMessages.length));
         }
         res.send(filterMessages);
@@ -129,7 +129,7 @@ app.post("/status", async (req, res) => {
 async function autoRemove() {
     const participants = await db.collection("participants").find().toArray();
     if (!participants) return;
-    const namesToRemove = participants.forEach((p) => {if((Date.now - p.lastStatus) >= 10000) return p.name})
+    const namesToRemove = participants.filter((p) => {if((Date.now - p.lastStatus) >= 10000) return p.name})
     if(!namesToRemove) return;
     db.collection("participants").deleteMany({ name: { $in: namesToRemove } });
     namesToRemove.map((name) => db.collection("messages")
