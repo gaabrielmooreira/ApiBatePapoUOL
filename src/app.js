@@ -26,7 +26,6 @@ try {
 app.get("/participants", async (req, res) => {
     try {
         const participants = await db.collection("participants").find().toArray();
-        if (participants.length === 0) return res.send("No one participants so far.");
         res.send(participants);
     } catch (err) {
         console.log(err);
@@ -68,11 +67,12 @@ app.get("/messages", async (req, res) => {
     const user = req.headers.user;
     try {
         const messages = await db.collection("messages").find();
-        console.log(messages);
-        const filterMessages = messages.filter((message) => message.from === user ||
-            message.to === message.to === 'Todos' ||
-            message.to === user
+        const filterMessages = messages.filter(
+            (message) => message.from === user ||
+                message.to === message.to === 'Todos' ||
+                message.to === user
         )
+
         if (limit) {
             if (limit <= 0 || typeof (limit) === "string") return res.sendStatus(422);
             if (limit < filterMessages.length) return res.send(filterMessages.slice(filterMessages.length - limit, filterMessages.length));
