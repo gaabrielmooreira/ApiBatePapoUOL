@@ -63,9 +63,9 @@ app.post("/participants", async (req, res) => {
 })
 
 app.get("/messages", async (req, res) => {
-    const limit  = Number(req.query.limit);
+    const limit = Number(req.query.limit);
     const user = req.headers.user;
-    const messages = [];
+    let messages;
     try {
         messages = await db.collection("messages").find().toArray();
     } catch (err) {
@@ -129,19 +129,24 @@ app.post("/status", async (req, res) => {
 async function autoRemove() {
     const participants = await db.collection("participants").find().toArray();
     if (!participants) return;
-    const namesToRemove = participants.filter((p) => {if((Date.now() - p.lastStatus) >= 10000) return p.name})
-    if(!namesToRemove) return;
+    const namesToRemove = participants
+        .filter((p) => {
+            const diff = (Date.now() - p.lastStatus) / 1000;
+            return diff >= 10;
+        })
+        .map((p) => p.name);
+    if (!namesToRemove) return;
     db.collection("participants").deleteMany({ name: { $in: namesToRemove } });
     namesToRemove.map((name) => db.collection("messages")
         .insertOne({
             from: name,
             to: 'Todos',
-            text: 'entra na sala...',
+            text: 'saiu da sala...',
             type: 'status',
             time: dayjs().format('HH:mm:ss')
         }));
 }
 
-setInterval(autoRemove, 15000);
+setInterval(autoRemove, 10000);
 
 app.listen(PORT, console.log(`Server started up in PORT: ${PORT}`));
