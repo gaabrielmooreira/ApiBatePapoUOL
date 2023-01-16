@@ -80,7 +80,7 @@ app.get("/messages", async (req, res) => {
             message.type === "status"
     )
 
-    if (Number(limit) === 0 || Number(limit) < 0 || typeof(limit) === "string") return res.sendStatus(422);
+    if (Number(limit) === 0 || Number(limit) < 0 || isNaN(limit)) return res.sendStatus(422);
     if (limit && Number(limit) < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
     
     res.send(filterMessages);
