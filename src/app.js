@@ -126,9 +126,8 @@ app.post("/status", async (req, res) => {
 })
 
 async function autoRemove() {
-    
-    const participants = await db.collection.find();
-
+    const participants = await db.collection("participants").find();
+    if (!participants) return;
     const namesToRemove = participants.forEach((p) => {
         if((Date.now - p.lastStatus) >= 10000) return p.name; 
     })
