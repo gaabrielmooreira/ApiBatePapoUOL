@@ -63,7 +63,7 @@ app.post("/participants", async (req, res) => {
 })
 
 app.get("/messages", async (req, res) => {
-    const limit = Number(req.query.limit);
+    const limit = req.query.limit;
     const user = req.headers.user;
     let messages;
     try {
@@ -80,8 +80,8 @@ app.get("/messages", async (req, res) => {
             message.type === "status"
     )
 
-    if (limit === 0 || limit < 0 || isNaN(limit)) return res.sendStatus(422);
-    if (limit && limit < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
+    if (Number(limit) === 0 || Number(limit) < 0 || typeof(limit) === "string") return res.sendStatus(422);
+    if (limit && Number(limit) < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
     
     res.send(filterMessages);
 })
