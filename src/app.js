@@ -64,6 +64,27 @@ app.post("/participants", async (req, res) => {
     res.sendStatus(201);
 })
 
+app.get("/messages", async (req, res) => {
+    const { limit } = req.query;
+    const user = req.headers.user;
+    try {
+        const messages = await db.collection("messages").find();
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+
+    const filterMessages = messages.filter((message) => {
+        return (
+            message.from === user || message.to ===message.to === 'Todos' || message.to === user
+        )
+     })
+    
+     if (messages.length === 0) return res.send("No messages.");
+     if (limit) return res.send(filterMessages.slice(filterMessages.length - limit,filterMessages.length));
+     res.send(filterMessages);
+})
+
 app.post("/messages", async (req, res) => {
     const from = req.headers.user;
     const { to, text, type } = req.body;
@@ -77,17 +98,20 @@ app.post("/messages", async (req, res) => {
         type: Joi.string().valid('message', 'private_message').required()
     })
 
-    const validation = messageSchema.validate({ to, text, type },{abortEarly: false});
-    if (validation.error){
+    const validation = messageSchema.validate({ to, text, type }, { abortEarly: false });
+    if (validation.error) {
         const errors = validation.error.details.map((detail) => detail.message);
         return res.status(422).send(errors);
     }
 
     const newMessage = { from, to, text, type };
-
-    db.collection("messages").insertOne({ ...newMessage, time: dayjs().format("HH:mm:ss") })
-
-    return res.sendStatus(201);
+    try {
+        await db.collection("messages").insertOne({ ...newMessage, time: dayjs().format("HH:mm:ss") });
+        return res.sendStatus(201);
+    } catch (err) {
+        console.log(err);
+        return res.sendStatus(500);
+    }
 })
 
 app.listen(PORT, console.log(`Server started up in PORT: ${process.env.PORT}`));
