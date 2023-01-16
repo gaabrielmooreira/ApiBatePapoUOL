@@ -79,8 +79,8 @@ app.get("/messages", async (req, res) => {
             message.to === user
     )
 
-    if (!limit || limit < 0 || limit === "NaN") return res.sendStatus(422);
-    if (limit < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
+    if (limit === 0 || limit < 0 || limit === "NaN") return res.sendStatus(422);
+    if (limit && limit < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
     
     res.send(filterMessages);
 })
