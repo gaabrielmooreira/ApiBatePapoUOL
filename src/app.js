@@ -65,24 +65,24 @@ app.post("/participants", async (req, res) => {
 app.get("/messages", async (req, res) => {
     const limit  = Number(req.query.limit);
     const user = req.headers.user;
+    const messages = [];
     try {
-        const messages = await db.collection("messages").find().toArray();
-        console.log(messages);
-        const filterMessages = messages.filter(
-            (message) => message.from === user ||
-                message.to === 'Todos' ||
-                message.to === user
-        )
-
-        if (limit) {
-            if (limit <= 0 || limit === NaN) return res.sendStatus(422);
-            if (limit < filterMessages.length) return res.send(filterMessages.slice(filterMessages.length - limit, filterMessages.length));
-        }
-        res.send(filterMessages);
+        messages = await db.collection("messages").find().toArray();
     } catch (err) {
         console.log(err);
         res.sendStatus(500);
     }
+
+    const filterMessages = messages.filter(
+        (message) => message.from === user ||
+            message.to === 'Todos' ||
+            message.to === user
+    )
+    if (limit) {
+        if (limit <= 0 || limit === NaN) return res.sendStatus(422);
+        if (limit < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
+    }
+    res.send(filterMessages);
 })
 
 app.post("/messages", async (req, res) => {
