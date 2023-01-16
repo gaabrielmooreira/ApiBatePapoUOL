@@ -76,10 +76,11 @@ app.get("/messages", async (req, res) => {
     const filterMessages = messages.filter(
         (message) => message.from === user ||
             message.to === 'Todos' ||
-            message.to === user
+            message.to === user ||
+            message.type === "status"
     )
 
-    if (limit === 0 || limit < 0 || limit === "NaN") return res.sendStatus(422);
+    if (limit === 0 || limit < 0 || isNaN(limit)) return res.sendStatus(422);
     if (limit && limit < filterMessages.length) return res.send(filterMessages.reverse().slice(0, limit));
     
     res.send(filterMessages);
@@ -140,7 +141,7 @@ async function autoRemove() {
     namesToRemove.map((name) => db.collection("messages")
         .insertOne({
             from: name,
-            to: 'Todos',
+            type: 'status',
             text: 'sai da sala...',
         }));
 }
