@@ -24,15 +24,14 @@ try {
 }
 
 app.get("/participants", async (req, res) => {
-    const participants = [];
     try {
         const participants = await db.collection("participants").find().toArray();
         if (participants.length === 0) return res.send("No one participants so far.");
+        res.send(participants);
     } catch (err) {
         console.log(err);
         res.sendStatus(500);
     }
-    res.send(participants);
 })
 
 app.post("/participants", async (req, res) => {
@@ -67,25 +66,22 @@ app.post("/participants", async (req, res) => {
 app.get("/messages", async (req, res) => {
     const { limit } = req.query;
     const user = req.headers.user;
-    const messages = [];
-    const filterMessages = [];
     try {
-        messages = await db.collection("messages").find();
-        filterMessages = messages.filter((message) => {
+        const messages = await db.collection("messages").find();
+        const filterMessages = messages.filter((message) => {
             return (
                 message.from === user || message.to === message.to === 'Todos' || message.to === user
             )
         })
-
-        if (filterMessages.length === 0) return res.send("No messages.");
-        if (limit) return res.send(filterMessages.slice(filterMessages.length - limit, filterMessages.length));
-        
+        if (limit){
+            if (limit <= 0 || typeof(limit) === "string") return res.sendStatus(422);
+            if (limit < filterMessages.length) return res.send(filterMessages.slice(filterMessages.length - limit, filterMessages.length));
+        }
+        res.send(filterMessages);
     } catch (err) {
         console.log(err);
         res.sendStatus(500);
     }
-
-    res.send(filterMessages);
 })
 
 app.post("/messages", async (req, res) => {
