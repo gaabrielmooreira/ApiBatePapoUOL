@@ -66,7 +66,8 @@ app.get("/messages", async (req, res) => {
     const { limit } = req.query;
     const user = req.headers.user;
     try {
-        const messages = await db.collection("messages").find();
+        const messages = await db.collection("messages").find().toArray();
+        console.log(messages);
         const filterMessages = messages.filter(
             (message) => message.from === user ||
                 message.to === message.to === 'Todos' ||
@@ -126,12 +127,12 @@ app.post("/status", async (req, res) => {
 })
 
 async function autoRemove() {
-    const participants = await db.collection("participants").find();
+    const participants = await db.collection("participants").find().toArray();
     if (!participants) return;
     const namesToRemove = participants.forEach((p) => {
         if ((Date.now - p.lastStatus) >= 10000) return p.name;
     })
-
+    if(!namesToRemove) return;
     db.collection("participants").deleteMany({ name: { $in: namesToRemove } });
     namesToRemove.map((name) => db.collection("messages")
         .insertOne({
