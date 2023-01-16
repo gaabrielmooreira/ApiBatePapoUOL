@@ -142,8 +142,6 @@ async function autoRemove() {
             from: name,
             to: 'Todos',
             text: 'sai da sala...',
-            type: 'status',
-            time: dayjs().format('HH:mm:ss')
         }));
 }
 
