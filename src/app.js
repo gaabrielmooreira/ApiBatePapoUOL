@@ -68,13 +68,13 @@ app.get("/messages", async (req, res) => {
     const user = req.headers.user;
     try {
         const messages = await db.collection("messages").find();
-        const filterMessages = messages.filter((message) => {
-            return (
-                message.from === user || message.to === message.to === 'Todos' || message.to === user
-            )
-        })
-        if (limit){
-            if (limit <= 0 || typeof(limit) === "string") return res.sendStatus(422);
+        console.log(messages);
+        const filterMessages = messages.filter((message) => message.from === user ||
+            message.to === message.to === 'Todos' ||
+            message.to === user
+        )
+        if (limit) {
+            if (limit <= 0 || typeof (limit) === "string") return res.sendStatus(422);
             if (limit < filterMessages.length) return res.send(filterMessages.slice(filterMessages.length - limit, filterMessages.length));
         }
         res.send(filterMessages);
@@ -129,18 +129,18 @@ async function autoRemove() {
     const participants = await db.collection("participants").find();
     if (!participants) return;
     const namesToRemove = participants.forEach((p) => {
-        if((Date.now - p.lastStatus) >= 10000) return p.name; 
+        if ((Date.now - p.lastStatus) >= 10000) return p.name;
     })
 
-    db.collection("participants").deleteMany({name: {$in: namesToRemove}});
+    db.collection("participants").deleteMany({ name: { $in: namesToRemove } });
     namesToRemove.map((name) => db.collection("messages")
-    .insertOne({
-        from: name,
-        to: 'Todos',
-        text: 'entra na sala...',
-        type: 'status',
-        time: dayjs().format('HH:mm:ss')
-    }));
+        .insertOne({
+            from: name,
+            to: 'Todos',
+            text: 'entra na sala...',
+            type: 'status',
+            time: dayjs().format('HH:mm:ss')
+        }));
 }
 
 setInterval(autoRemove, 15000);
